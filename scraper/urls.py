@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('news/', include('scrape_news.urls')),
     path('price/', include('scrape_price.urls')),
+    path('core/', include('scraper_core.urls'))
 ]

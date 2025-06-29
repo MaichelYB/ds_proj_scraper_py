@@ -10,17 +10,8 @@ from scrape_news.nsq_producer import Publisher
 
 # Create your views here.
 class ScraperNews:
-    def __init__(self):
-        self.optionCategories = [
-            'latest',
-            'stock-market-news',
-            'yahoo-finance-originals',
-            'economic-news',
-            'tech',
-            'housing-market',
-            'mergers-ipos',
-            'electric-vehicles'
-        ]
+    def __init__(self, url):
+        self.url = url
 
     def extract_time_ago(self,text):
         """
@@ -43,8 +34,7 @@ class ScraperNews:
         else:
             return [0, '']
 
-    def scrape_news(self,request):
-
+    def scrape_news(self):
         options = Options()
         options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         options.add_argument("--headless=new")  # use "--headless" if older Chrome
@@ -57,12 +47,10 @@ class ScraperNews:
         # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
         # driver = webdriver.Chrome(options=options)  # Selenium will auto-download chromedriver
         # driver = webdriver.Chrome()
-
-        for category in self.optionCategories:
-            print(f"https://finance.yahoo.com/topic/{category}/")
-            driver.get(f"https://finance.yahoo.com/topic/{category}/")
-            dataList = driver.find_elements(By.CLASS_NAME, "stream-item.story-item")
-            for data in dataList:
+        driver.get(self.url)
+        dataList = driver.find_elements(By.CLASS_NAME, "stream-item.story-item")
+        for data in dataList:
+            try:
                 story = {}
                 a_tag = data.find_element(By.TAG_NAME, "a")
                 story['link'] = a_tag.get_attribute("href")
@@ -72,17 +60,6 @@ class ScraperNews:
                 # publish the story to nsq
                 publisher = Publisher()
                 publisher.nsq_http_publish('news_scrapper', story)
-                # try:
-                #     a_tag = data.find_element(By.TAG_NAME, "a")
-                #     story['link'] = a_tag.get_attribute("href")
-                #     story['title'] = data.find_element(By.CSS_SELECTOR, "h3.clamp").text
-                #     story['content'] = data.find_element(By.CSS_SELECTOR, "p.clamp").text
-                #     story['date'] = self.extract_time_ago(data.find_element(By.CLASS_NAME, "publishing").text)
-                #     # publish the story to nsq
-                #     nsqProducer = NSQProducer()
-                #     nsqProducer.publish('news_scrapper', story)
-                # except:
-                #     print("No link found in this item.")
-            break
-
+            except:
+                print("No link found in this item.")
         driver.quit()

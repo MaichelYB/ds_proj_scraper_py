@@ -33,7 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'scrape_news',
     'scrape_price',
-    'scrape_stock_list',
+    'scraper_core',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
